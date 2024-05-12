@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\sda-online-2-csharp-backend_teamwork1.props" />
+</Project>

@@ -1,0 +1,28 @@
+@sda_online_2_csharp_backend_teamwork1_HostAddress = http://localhost:5110/api/users
+
+GET http://localhost:5110/api/users
+Accept: application/json
+
+###
+
+POST http://localhost:5110/api/user/login
+Content-Type: application/json
+
+{
+    "email": "Gil@example.com",
+    "password": "password"
+}
+
+###
+
+PUT http://localhost:5110/api/user/36b34468-0a22-46f7-b2e9-a686c9343342
+Content-Type: application/json
+
+{
+  "role": "Admin",
+  "name": "Rawabii",
+  "address": "main st.",
+  "email": "Rawabi@gmail.com",
+  "password": "password678",
+  "phone": "555558989"
+}
