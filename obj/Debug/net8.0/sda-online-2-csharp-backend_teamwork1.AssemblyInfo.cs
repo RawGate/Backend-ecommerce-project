@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("sda-online-2-csharp-backend_teamwork1")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+529e30ffae2a655358f20fc6877bf02cf26f104e")]
 [assembly: System.Reflection.AssemblyProductAttribute("sda-online-2-csharp-backend_teamwork1")]
 [assembly: System.Reflection.AssemblyTitleAttribute("sda-online-2-csharp-backend_teamwork1")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

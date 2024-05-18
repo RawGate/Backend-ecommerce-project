@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace backend_teamwork.Controllers
 {
     [ApiController]
-    [Route("/api/products")]
+    [Route("api/products")]
     public class ProductController : ControllerBase
     {
         private readonly ProductService _productService;
@@ -22,23 +22,25 @@ namespace backend_teamwork.Controllers
             _productService = new ProductService(appDbContext);
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAllProducts([FromQuery] string? filteringTerm, [FromQuery] string? sortColumn, [FromQuery] string? sortOrder, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
         {
             try
             {
                 var products = await _productService.GetAllProducts(filteringTerm, sortColumn, sortOrder, pageNumber, pageSize);
-                if (products.TotalCount < 1)
-                    return ApiResponse.NotFound("There are no Products");
+                if (products.Items == null || !products.Items.Any())
+                    return NotFound("There are no Products");
                 else
-                    return ApiResponse.Success(products, "The Products are returned Successfully");
+                    return Ok(products.Items);
             }
             catch (Exception e)
             {
-                return ApiResponse.ServerError(e.Message);
+                return StatusCode(500, $"Internal server error: {e.Message}");
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("{keyword}")]
         public async Task<IActionResult> SearchForProducts(string keyword)
         {
@@ -56,16 +58,27 @@ namespace backend_teamwork.Controllers
             }
         }
 
-        [HttpGet("{productId}")]
-        public async Task<IActionResult> GetProductById(Guid productId)
+        [AllowAnonymous]
+        [HttpGet("get/{identifier}", Name = "GetProductById")]
+        public async Task<IActionResult> GetProductById(string identifier)
         {
             try
             {
-                var product = await _productService.GetProductById(productId);
-                if (product == null)
-                    return ApiResponse.NotFound("The Product Not found");
-                else
-                    return ApiResponse.Success(product, "The Product is returned Successfully ");
+
+                if (Guid.TryParse(identifier, out Guid productId))
+                {
+                    var productById = await _productService.GetProductById(productId);
+                    if (productById != null)
+                        return ApiResponse.Success(productById, "Product found by ID");
+                }
+
+                // If not a valid Guid, assume it's a slug and try to find by slug
+                var productBySlug = await _productService.GetProductBySlug(identifier);
+                if (productBySlug != null)
+                    return ApiResponse.Success(productBySlug, "Product found by slug");
+
+                // If neither ID nor slug matched, return not found
+                return ApiResponse.NotFound("Product not found");
             }
             catch (Exception e)
             {
@@ -74,7 +87,6 @@ namespace backend_teamwork.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")] // Requires "Admin" role
         public async Task<IActionResult> AddProduct(CreateProductDto newProduct)
         {
             try
@@ -96,7 +108,6 @@ namespace backend_teamwork.Controllers
         }
 
         [HttpPut("{productId}")]
-        [Authorize(Roles = "Admin")] // Requires "Admin" role
         public async Task<IActionResult> UpdateProductById(Guid productId, CreateProductDto newProduct)
         {
             try
@@ -114,7 +125,6 @@ namespace backend_teamwork.Controllers
         }
 
         [HttpDelete("{productId}")]
-        [Authorize(Roles = "Admin")] // Requires "Admin" role
         public async Task<IActionResult> DeleteProductById(Guid productId)
         {
             try

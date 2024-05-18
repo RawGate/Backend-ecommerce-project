@@ -23,7 +23,8 @@ namespace backend_teamwork1.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             try
@@ -57,7 +58,7 @@ namespace backend_teamwork1.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Roles = "admin")]
+        [AllowAnonymous]
         public async Task<IActionResult> AddUser(CreateUserDto createUserDto)
         {
             try
@@ -105,6 +106,7 @@ namespace backend_teamwork1.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {

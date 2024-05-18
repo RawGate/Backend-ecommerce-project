@@ -13,7 +13,7 @@ using backend_teamwork.Models;
 
 namespace backend_teamwork.Controllers
 {
-    [Route("api/category")]
+    [Route("api/categories")]
     [ApiController]
     [Authorize(Roles = "admin")]
     public class CategoryController : ControllerBase
@@ -25,17 +25,31 @@ namespace backend_teamwork.Controllers
             _appDbContext = appDbContext;
         }
 
-        [HttpGet]
+          [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
         {
             try
             {
-                return await _appDbContext.Categories.ToListAsync();
+                var categories = await _appDbContext.Categories
+                    .Include(c => c.Products)
+                    .ToListAsync();
+
+                var categoryDtos = categories.Select(c => new CategoryDto
+                {
+                    CategoryId = c.CategoryId,
+                    Name = c.Name,
+                    Slug = c.Slug,
+                    Description = c.Description,
+                    CreatedAt = c.CreatedAt,
+                    Products = c.Products.ToList()
+                }).ToList();
+
+                return Ok(categoryDtos);
             }
             catch (Exception ex)
             {
-                // Log the exception or handle it as required
+                
                 return StatusCode(500, $"An error occurred while retrieving categories: {ex.Message}");
             }
         }
@@ -93,7 +107,7 @@ namespace backend_teamwork.Controllers
             }
             catch (DbUpdateException ex)
             {
-                // Log the exception details
+               
                 Console.WriteLine(ex.ToString());
 
                 if (ex.InnerException != null)
@@ -105,7 +119,7 @@ namespace backend_teamwork.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception details
+                
                 Console.WriteLine(ex.ToString());
 
                 return StatusCode(500, $"An error occurred while creating the category: {ex.Message}");
@@ -130,7 +144,7 @@ namespace backend_teamwork.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception or handle it as required
+              
                 return StatusCode(500, $"An error occurred while updating the category: {ex.Message}");
             }
         }
@@ -153,7 +167,7 @@ namespace backend_teamwork.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception or handle it as required
+              
                 return StatusCode(500, $"An error occurred while deleting the category: {ex.Message}");
             }
         }

@@ -8,6 +8,10 @@ namespace backend_teamwork.DTOs
 {
     public class ProductDto
     {
+        [Key]
+        [Required]
+        public Guid ProductId { get; set; }
+
         [MaxLength(10, ErrorMessage = "the name of product must less than 10 character")]
         [MinLength(2, ErrorMessage = "the name of product must more than 2 character")]
         [Required(ErrorMessage = "Product name is required")]
@@ -31,5 +35,6 @@ namespace backend_teamwork.DTOs
         [Required(ErrorMessage = "Product Stock is required")]
         [Range(0, int.MaxValue, ErrorMessage = $"the Stock can not be negative number")]
         public int Stock { get; set; } = 0;
+        public Guid CategoryId { get; set; }
     }
 }

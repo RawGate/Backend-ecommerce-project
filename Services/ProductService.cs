@@ -14,7 +14,7 @@ namespace backend_teamwork.Services
     public class ProductService
     {
         private readonly AppDbContext _appDbContext;
-    
+
         public ProductService(AppDbContext appDbContext)
         {
             _appDbContext = appDbContext;
@@ -28,7 +28,7 @@ namespace backend_teamwork.Services
                 filteringTerm = filteringTerm.ToLower();
                 productQuery = productQuery.Where(
                     p => p.Name.ToLower().Contains(filteringTerm));
-                    //p.Color.ToLower().Contains(filteringTerm));
+                //p.Color.ToLower().Contains(filteringTerm));
             }
 
             var keySelector = GetSortProperty(sortColumn);
@@ -57,6 +57,8 @@ namespace backend_teamwork.Services
                 SoldQuantity = p.SoldQuantity,
                 Price = p.Price,
                 Stock = p.Stock,
+                ProductId = p.ProductId, // Assign ProductId
+                CategoryId = p.CategoryId
             })
             .ToList();
             return new PaginationDto<ProductDto>
@@ -69,7 +71,7 @@ namespace backend_teamwork.Services
         }
 
 
-        private static Expression<Func<Product, object>> GetSortProperty(string?sortColumn)
+        private static Expression<Func<Product, object>> GetSortProperty(string? sortColumn)
         {
             return sortColumn?.ToLower().Trim()
             switch
@@ -99,49 +101,83 @@ namespace backend_teamwork.Services
 
         public async Task<ProductDto> GetProductById(Guid productId)
         {
-            try{
-            var product = await _appDbContext.Products
-            .Where(p => p.ProductId == productId)
-            .Select(p => new ProductDto
+            try
             {
-                Name = p.Name,
-                Slug=p.Slug,
-                Image = p.Image,
-                Description = p.Description,
-                //Color = p.Color,
-                SoldQuantity = p.SoldQuantity,
-                Price = p.Price,
-                Stock = p.Stock,
-            }).FirstOrDefaultAsync();
+                var product = await _appDbContext.Products
+                .Where(p => p.ProductId == productId)
+                .Select(p => new ProductDto
+                {
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    Image = p.Image,
+                    Description = p.Description,
+                    //Color = p.Color,
+                    SoldQuantity = p.SoldQuantity,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    ProductId = p.ProductId, // Assign ProductId
+                    CategoryId = p.CategoryId
+                }).FirstOrDefaultAsync();
 
-            return product;
-            }catch (Exception e)
+                return product;
+            }
+            catch (Exception e)
             {
                 throw new Exception("Error occurred while getting the product. " + e.Message);
             }
         }
+        public async Task<ProductDto> GetProductBySlug(string slug)
+        {
+            try
+            {
+                var product = await _appDbContext.Products
+                    .Where(p => p.Slug == slug)
+                    .Select(p => new ProductDto
+                    {
+                        Name = p.Name,
+                        Slug = p.Slug,
+                        Image = p.Image,
+                        Description = p.Description,
+                        SoldQuantity = p.SoldQuantity,
+                        Price = p.Price,
+                        Stock = p.Stock,
+                        ProductId = p.ProductId,
+                        CategoryId = p.CategoryId
+                    })
+                    .FirstOrDefaultAsync();
+
+                return product;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error occurred while getting the product by slug. " + e.Message);
+            }
+        }
+
 
         public async Task<Product> AddProduct(CreateProductDto newProduct)
         {
-            try{
-               
-                Product product = new Product
+            try
             {
-                Name = newProduct.Name,
-                Slug = Helper.GenerateSlug(newProduct.Name),
-                Image = newProduct.Image,
-                Description = newProduct.Description,
-                //Color = newProduct.Color,
-                SoldQuantity = newProduct.SoldQuantity,
-                Price = newProduct.Price,
-                Stock = newProduct.Stock,
-                CategoryId = newProduct.CategoryId
-            };
-            await _appDbContext.Products.AddAsync(product);
-            await _appDbContext.SaveChangesAsync();
 
-            return product;
-            }catch (Exception e)
+                Product product = new Product
+                {
+                    Name = newProduct.Name,
+                    Slug = Helper.GenerateSlug(newProduct.Name),
+                    Image = newProduct.Image,
+                    Description = newProduct.Description,
+                    //Color = newProduct.Color,
+                    SoldQuantity = newProduct.SoldQuantity,
+                    Price = newProduct.Price,
+                    Stock = newProduct.Stock,
+                    CategoryId = newProduct.CategoryId
+                };
+                await _appDbContext.Products.AddAsync(product);
+                await _appDbContext.SaveChangesAsync();
+
+                return product;
+            }
+            catch (Exception e)
             {
                 throw new Exception("Error occurred while adding the product. " + e.Message);
             }
@@ -152,24 +188,25 @@ namespace backend_teamwork.Services
         {
             try
             {
-            var product = _appDbContext.Products.FirstOrDefault(product => product.ProductId == productId);
-            if (product != null)
-            {
-                product.Name = newProduct.Name;
-                product.Slug = Helper.GenerateSlug(newProduct.Name);
-                product.Image = newProduct.Image;
-                product.Description = newProduct.Description;
-                //product.Color = newProduct.Color;
-                product.Price = newProduct.Price;
-                product.Stock = newProduct.Stock;
-                product.CategoryId = newProduct.CategoryId;
+                var product = _appDbContext.Products.FirstOrDefault(product => product.ProductId == productId);
+                if (product != null)
+                {
+                    product.Name = newProduct.Name;
+                    product.Slug = Helper.GenerateSlug(newProduct.Name);
+                    product.Image = newProduct.Image;
+                    product.Description = newProduct.Description;
+                    //product.Color = newProduct.Color;
+                    product.Price = newProduct.Price;
+                    product.Stock = newProduct.Stock;
+                    product.CategoryId = newProduct.CategoryId;
 
-            }else
-            {
-                throw new InvalidOperationException("Product not found");
-            }
-            await _appDbContext.SaveChangesAsync();
-            return product;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Product not found");
+                }
+                await _appDbContext.SaveChangesAsync();
+                return product;
             }
             catch (Exception e)
             {
@@ -179,15 +216,16 @@ namespace backend_teamwork.Services
 
         public async Task<bool> DeleteProduct(Guid productId)
         {
-            try{
-            var product = await _appDbContext.Products.FirstOrDefaultAsync(product => product.ProductId == productId);
-            if (product != null)
+            try
             {
-                _appDbContext.Remove(product);
-                _appDbContext.SaveChanges();
-                return true;
-            }
-            return false;
+                var product = await _appDbContext.Products.FirstOrDefaultAsync(product => product.ProductId == productId);
+                if (product != null)
+                {
+                    _appDbContext.Remove(product);
+                    _appDbContext.SaveChanges();
+                    return true;
+                }
+                return false;
             }
             catch (Exception e)
             {
