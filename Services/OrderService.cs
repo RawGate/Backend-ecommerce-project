@@ -14,24 +14,24 @@ namespace backend_teamwork.Services
       _appDbContext = appDbContext;
     }
 
-    // Get all orders with selected fields
     public async Task<List<OrderDto>> GetAllOrdersService()
     {
       var order = await _appDbContext.Orders
-      .Include(_ => _.User)
-      .Select(order => new OrderDto
-      {
-        OrderId = order.OrderId,
-        Date = order.Date,
-        OrderStatus = order.OrderStatus,
-        UserId = order.UserId,
-        UserName = order.User.Name
-      }).ToListAsync();
+        .Include(_ => _.User)
+        .Select(order => new OrderDto
+        {
+          OrderId = order.OrderId,
+          Date = order.Date,
+          OrderStatus = order.OrderStatus,
+          UserId = order.UserId,
+          UserName = order.User.Name,
+          TotalPrice = order.TotalPrice 
+        }).ToListAsync();
 
       return order;
     }
 
-    // Get all orders by user id (logged in user)
+
     public async Task<List<Order>> GetUserOrdersService(Guid userId)
     {
       var userOrders = await _appDbContext.Orders
@@ -42,7 +42,7 @@ namespace backend_teamwork.Services
       return userOrders;
     }
 
-    // Get order by order id
+
     public async Task<Order?> GetOrderByIdService(Guid orderId)
     {
       return await _appDbContext.Orders
@@ -52,17 +52,33 @@ namespace backend_teamwork.Services
       .FirstOrDefaultAsync(order => order.OrderId == orderId);
     }
 
-    // Add Order
+
     public async Task<Order> AddOrderService(NewOrderDto newOrder)
     {
       try
       {
+        
+        var userExists = await _appDbContext.Users.AnyAsync(u => u.UserId == newOrder.UserId);
+        if (!userExists)
+        {
+          throw new InvalidOperationException("User does not exist.");
+        }
+
+        var productIds = newOrder.Products.Select(p => p.ProductId).ToList();
+        var existingProducts = await _appDbContext.Products.Where(p => productIds.Contains(p.ProductId)).ToListAsync();
+
+        if (existingProducts.Count != newOrder.Products.Count)
+        {
+          throw new InvalidOperationException("One or more products do not exist.");
+        }
+
         Order order = new()
         {
           OrderId = Guid.NewGuid(),
           Date = DateTime.UtcNow,
           TotalPrice = newOrder.TotalPrice,
-          UserId = newOrder.UserId
+          UserId = newOrder.UserId,
+          OrderStatus = "pending" 
         };
 
         foreach (var product in newOrder.Products)
@@ -81,13 +97,22 @@ namespace backend_teamwork.Services
 
         return order;
       }
-      catch (DbUpdateException e)
+      catch (DbUpdateException dbEx)
       {
-        throw new InvalidOperationException("Could not save the order to database: ", e);
+       
+        Console.WriteLine($"Database update exception: {dbEx.Message}, Inner Exception: {dbEx.InnerException?.Message}");
+        throw new InvalidOperationException("Could not save the order to the database.", dbEx);
+      }
+      catch (Exception ex)
+      {
+       
+        Console.WriteLine($"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message}");
+        throw new InvalidOperationException("There was an issue when processing the order.", ex);
       }
     }
 
-    // Update order by id
+
+   
     public async Task<Order?> UpdateOrderService(Guid orderId, UpdateOrderDto updateOrder)
     {
       var order = await _appDbContext.Orders.FirstOrDefaultAsync(order => order.OrderId == orderId);
@@ -99,7 +124,7 @@ namespace backend_teamwork.Services
       return order;
     }
 
-    // Delete order by id
+    
     public async Task DeleteOrderService(Guid orderId)
     {
       var order = _appDbContext.Orders.FirstOrDefault(order => order.OrderId == orderId);

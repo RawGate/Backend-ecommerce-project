@@ -7,6 +7,7 @@ using backend_teamwork.DTOs;
 using backend_teamwork.EntityFramework;
 using backend_teamwork.Helpers;
 using backend_teamwork.Models;
+using backend_teamwork1.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend_teamwork.Services
@@ -20,20 +21,34 @@ namespace backend_teamwork.Services
             _appDbContext = appDbContext;
         }
 
-        public async Task<PaginationDto<ProductDto>> GetAllProducts(string? filteringTerm, string? sortColumn, string? sortOrder, int pageNumber, int pageSize)
+        public async Task<PaginationDto<ProductDto>> GetAllProducts(QueryParameters queryParameters)
         {
-            IQueryable<Product> productQuery = _appDbContext.Products;
-            if (!string.IsNullOrWhiteSpace(filteringTerm))
+            IQueryable<Product> productQuery = _appDbContext.Products.Include(p => p.Category);
+
+            if (!string.IsNullOrWhiteSpace(queryParameters.SearchTerm))
             {
-                filteringTerm = filteringTerm.ToLower();
-                productQuery = productQuery.Where(
-                    p => p.Name.ToLower().Contains(filteringTerm));
-                //p.Color.ToLower().Contains(filteringTerm));
+                string searchTerm = queryParameters.SearchTerm.ToLower();
+                productQuery = productQuery.Where(p => p.Name.ToLower().Contains(searchTerm));
             }
 
-            var keySelector = GetSortProperty(sortColumn);
+            if (queryParameters.SelectedCategories != null && queryParameters.SelectedCategories.Any())
+            {
+                productQuery = productQuery.Where(p => queryParameters.SelectedCategories.Contains(p.CategoryId)); 
+            }
 
-            if (sortOrder?.ToLower() == "desc")
+            if (queryParameters.MinPrice.HasValue)
+            {
+                productQuery = productQuery.Where(p => p.Price >= queryParameters.MinPrice.Value);
+            }
+
+            if (queryParameters.MaxPrice.HasValue)
+            {
+                productQuery = productQuery.Where(p => p.Price <= queryParameters.MaxPrice.Value);
+            }
+
+            var keySelector = GetSortProperty(queryParameters.SortBy);
+
+            if (queryParameters.SortOrder?.ToLower() == "desc")
             {
                 productQuery = productQuery.OrderByDescending(keySelector);
             }
@@ -44,31 +59,37 @@ namespace backend_teamwork.Services
 
             var totalProductCount = await _appDbContext.Products.CountAsync();
 
-            var products = productQuery
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .Select(p => new ProductDto
-            {
-                Name = p.Name,
-                Slug = p.Slug,
-                Image = p.Image,
-                Description = p.Description,
-                //Color = p.Color,
-                SoldQuantity = p.SoldQuantity,
-                Price = p.Price,
-                Stock = p.Stock,
-                ProductId = p.ProductId, // Assign ProductId
-                CategoryId = p.CategoryId
-            })
-            .ToList();
+            var products = await productQuery
+                .Skip((queryParameters.PageNumber - 1) * queryParameters.PageSize)
+                .Take(queryParameters.PageSize)
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    Image = p.Image,
+                    Description = p.Description,
+                    SoldQuantity = p.SoldQuantity,
+                    Price = p.Price,
+                    Stock = p.Stock,
+                    CategoryId = p.CategoryId,
+                    Category = new CategoryDto
+                    {
+                        CategoryId = p.Category.CategoryId,
+                        Name = p.Category.Name,
+                    }
+                })
+                .ToListAsync();
+
             return new PaginationDto<ProductDto>
             {
                 Items = products,
                 TotalCount = totalProductCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
+                PageNumber = queryParameters.PageNumber,
+                PageSize = queryParameters.PageSize
             };
         }
+
 
 
         private static Expression<Func<Product, object>> GetSortProperty(string? sortColumn)
@@ -111,11 +132,10 @@ namespace backend_teamwork.Services
                     Slug = p.Slug,
                     Image = p.Image,
                     Description = p.Description,
-                    //Color = p.Color,
                     SoldQuantity = p.SoldQuantity,
                     Price = p.Price,
                     Stock = p.Stock,
-                    ProductId = p.ProductId, // Assign ProductId
+                    ProductId = p.ProductId, 
                     CategoryId = p.CategoryId
                 }).FirstOrDefaultAsync();
 
@@ -166,8 +186,6 @@ namespace backend_teamwork.Services
                     Slug = Helper.GenerateSlug(newProduct.Name),
                     Image = newProduct.Image,
                     Description = newProduct.Description,
-                    //Color = newProduct.Color,
-                    SoldQuantity = newProduct.SoldQuantity,
                     Price = newProduct.Price,
                     Stock = newProduct.Stock,
                     CategoryId = newProduct.CategoryId
@@ -195,7 +213,6 @@ namespace backend_teamwork.Services
                     product.Slug = Helper.GenerateSlug(newProduct.Name);
                     product.Image = newProduct.Image;
                     product.Description = newProduct.Description;
-                    //product.Color = newProduct.Color;
                     product.Price = newProduct.Price;
                     product.Stock = newProduct.Stock;
                     product.CategoryId = newProduct.CategoryId;

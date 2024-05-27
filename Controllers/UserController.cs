@@ -23,13 +23,12 @@ namespace backend_teamwork1.Controllers
         }
 
         [HttpGet]
-        //[Authorize(Roles = "admin")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string searchTerm = "", [FromQuery] string sortBy = "")
         {
             try
             {
-                var users = await _userService.GetAllUsersAsync(pageNumber, pageSize);
+                var users = await _userService.GetAllUsersAsync(pageNumber, pageSize, searchTerm, sortBy);
                 return ApiResponse.Success(users, "All users retrieved successfully");
             }
             catch (Exception ex)
@@ -37,6 +36,28 @@ namespace backend_teamwork1.Controllers
                 return ApiResponse.ServerError($"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPut("{userId}/block")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ToggleUserBlockStatus(Guid userId)
+        {
+            try
+            {
+                var result = await _userService.ToggleUserBlockStatusAsync(userId);
+                if (result == null)
+                {
+                    return ApiResponse.NotFound("User not found");
+                }
+
+                var message = result.Value ? "User blocked successfully" : "User unblocked successfully";
+                return ApiResponse.Success(true, message);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse.ServerError($"Internal server error: {ex.Message}");
+            }
+        }
+
 
         [HttpGet("{userId}")]
         [Authorize(Roles = "admin")]
@@ -73,7 +94,7 @@ namespace backend_teamwork1.Controllers
         }
 
         [HttpPut("{userId}")]
-        [Authorize(Roles = "admin")]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(Guid userId, UpdateUserDto updateUserDto)
         {
             try

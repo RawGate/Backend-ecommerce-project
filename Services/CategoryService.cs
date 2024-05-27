@@ -1,17 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using backend_teamwork.DTOs;
-using backend_teamwork.EntityFramework;
-using backend_teamwork.Helpers;
-using backend_teamwork.Models;
 using backend_teamwork1.DTOs;
+using backend_teamwork1.Services;
+using backend_teamwork.EntityFramework;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
+using backend_teamwork.Models;
+using backend_teamwork.Helpers;
 
 namespace backend_teamwork.Services
 {
-    public class CategoryService
+    public class CategoryService : ICategoryService
     {
         private readonly AppDbContext _appDbContext;
 
@@ -20,11 +18,13 @@ namespace backend_teamwork.Services
             _appDbContext = appDbContext;
         }
 
-        public async Task<IEnumerable<CategoryDto>> GetAllCategories()
+        public async Task<IEnumerable<CategoryDto>> GetAllCategories(int pageNumber, int pageSize)
         {
             try
             {
                 var categories = await _appDbContext.Categories
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
                     .Select(c => new CategoryDto
                     {
                         CategoryId = c.CategoryId,
@@ -46,14 +46,13 @@ namespace backend_teamwork.Services
             try
             {
                 var category = await _appDbContext.Categories
-                    .Include(c => c.Products) // Include the Products navigation property
+                    .Include(c => c.Products)
                     .Where(c => c.CategoryId == categoryId)
                     .Select(c => new CategoryDto
                     {
                         CategoryId = c.CategoryId,
                         Name = c.Name,
                         Slug = c.Slug,
-                        Products = c.Products // Assign the Products to the DTO
                     })
                     .FirstOrDefaultAsync();
 
@@ -85,23 +84,23 @@ namespace backend_teamwork.Services
             }
         }
 
-        public async Task<Category> UpdateCategoryById(Guid categoryId, CreateCategoryDto newCategory)
+        public async Task<bool> UpdateCategory(Guid categoryId, CreateCategoryDto dto)
         {
             try
             {
                 var category = await _appDbContext.Categories.FirstOrDefaultAsync(c => c.CategoryId == categoryId);
                 if (category != null)
                 {
-                    category.Name = newCategory.Name;
-                    category.Slug = Helper.GenerateSlug(newCategory.Name);
+                    category.Name = dto.Name;
+                    category.Description = dto.Description;
+
+                    await _appDbContext.SaveChangesAsync();
+                    return true;
                 }
                 else
                 {
-                    throw new InvalidOperationException("Category not found");
+                    return false;
                 }
-
-                await _appDbContext.SaveChangesAsync();
-                return category;
             }
             catch (Exception e)
             {
@@ -131,4 +130,8 @@ namespace backend_teamwork.Services
             }
         }
     }
+}
+public interface ICategoryService
+{
+    Task<bool> UpdateCategory(Guid categoryId, CreateCategoryDto dto); 
 }

@@ -21,14 +21,33 @@ namespace backend_teamwork.Controllers
         {
             _productService = new ProductService(appDbContext);
         }
-
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetAllProducts([FromQuery] string? filteringTerm, [FromQuery] string? sortColumn, [FromQuery] string? sortOrder, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
+        public async Task<IActionResult> GetAllProducts(
+    [FromQuery] string? searchTerm,
+    [FromQuery] string? sortBy,
+    [FromQuery] string? sortOrder,
+    [FromQuery] int pageNumber = 1,
+    [FromQuery] int pageSize = 3,
+    [FromQuery] List<Guid>? selectedCategories = null,
+    [FromQuery] decimal? minPrice = null,
+    [FromQuery] decimal? maxPrice = null)
         {
             try
             {
-                var products = await _productService.GetAllProducts(filteringTerm, sortColumn, sortOrder, pageNumber, pageSize);
+                var queryParameters = new QueryParameters
+                {
+                    SearchTerm = searchTerm,
+                    SortBy = sortBy,
+                    SortOrder = sortOrder,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    SelectedCategories = selectedCategories,
+                    MinPrice = minPrice,
+                    MaxPrice = maxPrice
+                };
+
+                var products = await _productService.GetAllProducts(queryParameters);
                 if (products.Items == null || !products.Items.Any())
                     return NotFound("There are no Products");
                 else
@@ -39,6 +58,8 @@ namespace backend_teamwork.Controllers
                 return StatusCode(500, $"Internal server error: {e.Message}");
             }
         }
+
+
 
         [AllowAnonymous]
         [HttpGet("{keyword}")]
@@ -77,7 +98,7 @@ namespace backend_teamwork.Controllers
                 if (productBySlug != null)
                     return ApiResponse.Success(productBySlug, "Product found by slug");
 
-                // If neither ID nor slug matched, return not found
+             
                 return ApiResponse.NotFound("Product not found");
             }
             catch (Exception e)
@@ -87,6 +108,7 @@ namespace backend_teamwork.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> AddProduct(CreateProductDto newProduct)
         {
             try
@@ -108,6 +130,7 @@ namespace backend_teamwork.Controllers
         }
 
         [HttpPut("{productId}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateProductById(Guid productId, CreateProductDto newProduct)
         {
             try
@@ -125,6 +148,7 @@ namespace backend_teamwork.Controllers
         }
 
         [HttpDelete("{productId}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteProductById(Guid productId)
         {
             try

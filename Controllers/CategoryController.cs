@@ -10,6 +10,7 @@ using backend_teamwork1.Services;
 using backend_teamwork.Services;
 using backend_teamwork.EntityFramework;
 using backend_teamwork.Models;
+using backend_teamwork.Helpers;
 
 namespace backend_teamwork.Controllers
 {
@@ -19,20 +20,41 @@ namespace backend_teamwork.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly AppDbContext _appDbContext;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(AppDbContext appDbContext)
+        public CategoryController(AppDbContext appDbContext, ICategoryService categoryService)
         {
             _appDbContext = appDbContext;
+            _categoryService = categoryService;
         }
 
-          [HttpGet]
+        [HttpGet]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
+        public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string searchTerm = "", [FromQuery] string sortBy = "")
         {
             try
             {
-                var categories = await _appDbContext.Categories
+                var query = _appDbContext.Categories
                     .Include(c => c.Products)
+                    .AsQueryable();
+
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    query = query.Where(c => c.Name.Contains(searchTerm));
+                }
+
+                if (sortBy.ToLower() == "productcount")
+                {
+                    query = query.OrderByDescending(c => c.Products.Count);
+                }
+                else
+                {
+                    query = query.OrderBy(c => c.Name);
+                }
+
+                var categories = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
                     .ToListAsync();
 
                 var categoryDtos = categories.Select(c => new CategoryDto
@@ -49,13 +71,12 @@ namespace backend_teamwork.Controllers
             }
             catch (Exception ex)
             {
-                
                 return StatusCode(500, $"An error occurred while retrieving categories: {ex.Message}");
             }
         }
 
-      [HttpGet("{id}")]
-      [AllowAnonymous]
+        [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<CategoryDto>> GetCategory(Guid id)
         {
             var category = await _appDbContext.Categories
@@ -74,15 +95,15 @@ namespace backend_teamwork.Controllers
                 Slug = category.Slug,
                 Description = category.Description,
                 CreatedAt = category.CreatedAt,
-                Products = category.Products.ToList()
+                //Products = category.Products.ToList()
             };
 
             return categoryDto;
         }
-    
 
         [HttpPost]
-        public async Task<ActionResult<CategoryDto>> PostCategory(CategoryDto categoryDto)
+        [Authorize(Roles = "admin")]
+        public async Task<ActionResult<CategoryDto>> PostCategory(CreateCategoryDto categoryDto)
         {
             try
             {
@@ -93,21 +114,29 @@ namespace backend_teamwork.Controllers
 
                 var category = new Category
                 {
-                    CategoryId = categoryDto.CategoryId,
+                    CategoryId = Guid.NewGuid(),
                     Name = categoryDto.Name,
-                    Slug = categoryDto.Slug,
+                    Slug = Helper.GenerateSlug(categoryDto.Name),
                     Description = categoryDto.Description,
-                    CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc) // Convert DateTime to UTC
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 _appDbContext.Categories.Add(category);
                 await _appDbContext.SaveChangesAsync();
 
-                return CreatedAtAction(nameof(GetCategory), new { id = category.CategoryId }, category);
+                var categoryResponse = new CategoryDto
+                {
+                    CategoryId = category.CategoryId,
+                    Name = category.Name,
+                    Slug = category.Slug,
+                    Description = category.Description,
+                    CreatedAt = category.CreatedAt
+                };
+
+                return CreatedAtAction(nameof(GetCategory), new { id = categoryResponse.CategoryId }, categoryResponse);
             }
             catch (DbUpdateException ex)
             {
-               
                 Console.WriteLine(ex.ToString());
 
                 if (ex.InnerException != null)
@@ -119,37 +148,38 @@ namespace backend_teamwork.Controllers
             }
             catch (Exception ex)
             {
-                
                 Console.WriteLine(ex.ToString());
-
                 return StatusCode(500, $"An error occurred while creating the category: {ex.Message}");
             }
         }
-
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategory(Guid id, Category category)
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] CreateCategoryDto dto)
         {
             try
             {
-                if (id != category.CategoryId)
+                Console.WriteLine($"Received request to update category with ID: {id}");
+                var result = await _categoryService.UpdateCategory(id, dto); // Correct method call
+                if (result)
                 {
-                    return BadRequest();
+                    Console.WriteLine("Category update successful");
+                    return Ok();
                 }
-
-                _appDbContext.Entry(category).State = EntityState.Modified;
-
-                await _appDbContext.SaveChangesAsync();
-
-                return NoContent();
+                else
+                {
+                    Console.WriteLine($"Category with ID {id} not found");
+                    return NotFound();
+                }
             }
             catch (Exception ex)
             {
-              
-                return StatusCode(500, $"An error occurred while updating the category: {ex.Message}");
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
             try
@@ -167,7 +197,6 @@ namespace backend_teamwork.Controllers
             }
             catch (Exception ex)
             {
-              
                 return StatusCode(500, $"An error occurred while deleting the category: {ex.Message}");
             }
         }

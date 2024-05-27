@@ -40,8 +40,7 @@ namespace backend_teamwork.Controllers
       }
     }
 
-    // api/orders/userOrders  [HttpGet("userOrders")]
-    // Get specific user orders 
+   
     [Authorize]
     [HttpGet("userOrders")]
     public async Task<IActionResult> GetUserOrders()
@@ -99,6 +98,7 @@ namespace backend_teamwork.Controllers
     }
 
     [HttpPost]
+    
     public async Task<IActionResult> AddOrder(NewOrderDto newOrder)
     {
       try
@@ -110,15 +110,22 @@ namespace backend_teamwork.Controllers
 
         if (newOrder == null)
         {
-          return ApiResponse.BadRequest("Invalid Order Data"); //exception
+          return ApiResponse.BadRequest("Invalid Order Data");
         }
 
         var order = await _orderService.AddOrderService(newOrder);
         return ApiResponse.Created(order, "Order is created successfully");
       }
-      catch (Exception e)
+      catch (InvalidOperationException ex)
       {
-        Console.WriteLine($"Exception : {e.Message}");
+        // Log detailed error
+        Console.WriteLine($"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message}");
+        return ApiResponse.ServerError("There was an issue when processing the order");
+      }
+      catch (Exception ex)
+      {
+        
+        Console.WriteLine($"Exception: {ex.Message}, Inner Exception: {ex.InnerException?.Message}");
         return ApiResponse.ServerError("There was an issue when fetching the order");
       }
     }

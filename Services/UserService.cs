@@ -26,22 +26,56 @@ namespace backend_teamwork.Services
             return user != null ? MapToDto(user) : null;
         }
 
-     public async Task<List<UserDto>> GetAllUsersAsync(int pageNumber, int pageSize)
-{
-    try
-    {
-        var users = await _dbContext.Users
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        public async Task<List<UserDto>> GetAllUsersAsync(int pageNumber, int pageSize, string searchTerm, string sortBy)
+        {
+            try
+            {
+                var query = _dbContext.Users.AsQueryable();
 
-        return users.Select(MapToDto).ToList();
-    }
-    catch (Exception ex)
-    {
-        throw new Exception("Error occurred while fetching users.", ex);
-    }
-}
+
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    query = query.Where(user => user.Name.Contains(searchTerm) || user.Email.Contains(searchTerm));
+                }
+
+
+                switch (sortBy?.ToLower())
+                {
+                    case "name":
+                        query = query.OrderBy(user => user.Name);
+                        break;
+                    case "email":
+                        query = query.OrderBy(user => user.Email);
+                        break;
+                    default:
+                        query = query.OrderBy(user => user.Name); // Default sorting
+                        break;
+                }
+
+                var users = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return users.Select(MapToDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while fetching users.", ex);
+            }
+        }
+
+        public async Task<bool?> ToggleUserBlockStatusAsync(Guid userId)
+        {
+            var user = await _dbContext.Users.FindAsync(userId);
+            if (user == null) return null;
+
+            user.IsBlocked = !user.IsBlocked;
+            await _dbContext.SaveChangesAsync();
+            return user.IsBlocked;
+        }
+
+
 
         public async Task<User> AddUserAsync(CreateUserDto createUserDto)
         {
@@ -71,10 +105,10 @@ namespace backend_teamwork.Services
                 throw new InvalidOperationException("User not found");
             }
 
-            existingUser.Role = updateUserDto.Role;
+            //existingUser.Role = updateUserDto.Role;
             existingUser.Name = updateUserDto.Name;
             existingUser.Address = updateUserDto.Address;
-            existingUser.Email = updateUserDto.Email;
+            //existingUser.Email = updateUserDto.Email;
 
             if (!string.IsNullOrEmpty(updateUserDto.Password))
             {

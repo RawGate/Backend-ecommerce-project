@@ -19,7 +19,7 @@ namespace backend_teamwork.Models
 
     public Guid UserId { get; set; }
 
-   // public List<ProductModel> Products { get; set; } // Navigation property for M-M relationship with products 
+   // public List<ProductModel> Products { get; set; } 
     public List<OrderProductModel> OrderProducts { get; set; } = new List<OrderProductModel>();
   }
 }

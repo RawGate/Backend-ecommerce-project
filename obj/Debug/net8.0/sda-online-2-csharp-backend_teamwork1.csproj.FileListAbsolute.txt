@@ -127,3 +127,5 @@ C:\Users\yusra\OneDrive\Desktop\Mydo\sda-online-2-csharp-backend_teamwork1\bin\D
 C:\Users\yusra\OneDrive\Desktop\Mydo\sda-online-2-csharp-backend_teamwork1\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\yusra\OneDrive\Desktop\Mydo\sda-online-2-csharp-backend_teamwork1\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\yusra\OneDrive\Desktop\Mydo\sda-online-2-csharp-backend_teamwork1\obj\Debug\net8.0\sda-online-2-csharp-backend_teamwork1.sourcelink.json
+C:\Users\yusra\OneDrive\Desktop\Mydo\sda-online-2-csharp-backend_teamwork1\bin\Debug\net8.0\DotNetEnv.dll
+C:\Users\yusra\OneDrive\Desktop\Mydo\sda-online-2-csharp-backend_teamwork1\bin\Debug\net8.0\Sprache.dll

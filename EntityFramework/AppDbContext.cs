@@ -117,9 +117,9 @@ namespace backend_teamwork.EntityFramework
 
             //---------- Orders and Products Relation M-M -----------
 
-            modelBuilder.Entity<OrderProduct>()
+             modelBuilder.Entity<OrderProduct>()
             .HasKey(_ => _.OrderProductId);
-
+ 
             modelBuilder.Entity<OrderProduct>()
             .HasOne(_ => _.Order)
             .WithMany(_ => _.OrderProducts)

@@ -22,7 +22,7 @@ namespace backend_teamwork1.DTOs
         public string Description { get; set; }
 
         [Column("createdat")]
-        public DateTime CreatedAt { get; set; }  // Ensure this property is of type DateTime
+        public DateTime CreatedAt { get; set; }
 
         public List<Product> Products { get; set; }
     }

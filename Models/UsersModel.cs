@@ -26,6 +26,7 @@ namespace UsersModels
 
         [Required(ErrorMessage = "Phone is required")]
         public int Phone { get; set; }
+        public bool IsBlocked { get; set; }
 
     }
 }

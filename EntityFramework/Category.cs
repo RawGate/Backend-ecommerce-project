@@ -5,26 +5,26 @@ using backend_teamwork.EntityFramework;
 
 namespace backend_teamwork.Models
 {
-    [Table("category")] // Specify the table name in the database
+    [Table("category")] 
     public class Category
     {
         [Key]
-        [Column("category_id")] // Map to the 'category_id' column in the database
+        [Column("category_id")]
         public Guid CategoryId { get; set; }
 
         [Required]
-        [Column("name")] // Map to the 'name' column in the database
+        [Column("name")] 
         public string Name { get; set; }
 
         [Required]
-        [Column("slug")] // Map to the 'slug' column in the database
+        [Column("slug")] 
         public string Slug { get; set; }
 
-        [Column("description")] // Map to the 'description' column in the database
+        [Column("description")] 
         public string Description { get; set; }
 
         [Required]
-        [Column("createdat")] // Map to the 'createdat' column in the database
+        [Column("createdat")] 
         public DateTime CreatedAt { get; set; }
 
         public List<Product> Products { get; set; }

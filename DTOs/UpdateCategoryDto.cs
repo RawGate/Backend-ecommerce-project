@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace backend_teamwork1.DTOs
 {
-    public class CreateCategoryDto
+    public class UpdateCategoryDto
     {
         [Required]
         public string Name { get; set; }

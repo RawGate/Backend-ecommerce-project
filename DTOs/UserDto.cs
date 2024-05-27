@@ -23,5 +23,6 @@ namespace backend_teamwork1.DTOs
         [Required(ErrorMessage = "Phone number is required")]
         [Phone(ErrorMessage = "Invalid phone number format")]
         public int Phone { get; set; }
+        public bool IsBlocked { get; set; }
     }
 }

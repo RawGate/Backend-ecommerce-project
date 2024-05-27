@@ -30,8 +30,9 @@ namespace backend_teamwork.EntityFramework
 
         [Required(ErrorMessage = "Phone is required")]
         public int Phone { get; set; }
+        public bool IsBlocked { get; set; }
 
         //Relation 1-M
-       public ICollection<Order> Orders { get; set; }
+        public ICollection<Order> Orders { get; set; }
     }
 }

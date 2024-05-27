@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using backend_teamwork.Models;
+using backend_teamwork1.DTOs;
 
 namespace backend_teamwork.DTOs
 {
@@ -36,5 +38,8 @@ namespace backend_teamwork.DTOs
         [Range(0, int.MaxValue, ErrorMessage = $"the Stock can not be negative number")]
         public int Stock { get; set; } = 0;
         public Guid CategoryId { get; set; }
+        public List<CategoryDto> Categories { get; set; }
+        public CategoryDto Category { get; internal set; }
     }
 }
+
