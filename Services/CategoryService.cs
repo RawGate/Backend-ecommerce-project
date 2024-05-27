@@ -19,9 +19,11 @@ namespace backend_teamwork.Services
         }
 
         public async Task<IEnumerable<CategoryDto>> GetAllCategories(int pageNumber, int pageSize)
+        
         {
             try
             {
+                
                 var categories = await _appDbContext.Categories
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)

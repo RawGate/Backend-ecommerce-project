@@ -51,7 +51,7 @@ namespace backend_teamwork.EntityFramework
 
         [Column("category_id")] 
         public Guid CategoryId { get; set; }
-       // public List<Category> Categories { get; set; }
+        public List<Category> Categories { get; set; }
 
         
         public Category Category { get; set; }

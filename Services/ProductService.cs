@@ -179,7 +179,6 @@ namespace backend_teamwork.Services
         {
             try
             {
-
                 Product product = new Product
                 {
                     Name = newProduct.Name,
@@ -195,11 +194,24 @@ namespace backend_teamwork.Services
 
                 return product;
             }
+            catch (DbUpdateException e)
+            {
+                if (e.InnerException is Npgsql.PostgresException post)
+                {
+                    // Log detailed Postgres exception information
+                    Console.WriteLine($"Postgres Error: {post.MessageText}, Detail: {post.Detail}");
+                }
+                // Log the full exception stack trace for further investigation
+                Console.WriteLine($"Exception: {e}");
+                throw new Exception("Error occurred while adding the product. " + e.Message, e);
+            }
             catch (Exception e)
             {
-                throw new Exception("Error occurred while adding the product. " + e.Message);
+                // Log the full exception stack trace for further investigation
+                Console.WriteLine($"Exception: {e}");
+                throw new Exception("Error occurred while adding the product. " + e.Message, e);
             }
-        }
+           }
 
 
         public async Task<Product> UpdateProductById(Guid productId, CreateProductDto newProduct)
