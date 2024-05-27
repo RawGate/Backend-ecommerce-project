@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using backend_teamwork.EntityFramework;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace backend_teamwork1.DTOs
 {
@@ -8,5 +10,8 @@ namespace backend_teamwork1.DTOs
         public string Name { get; set; }
 
         public string Description { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
     }
 }

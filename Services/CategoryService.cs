@@ -43,29 +43,6 @@ namespace backend_teamwork.Services
             }
         }
 
-        public async Task<CategoryDto> GetCategoryById(Guid categoryId)
-        {
-            try
-            {
-                var category = await _appDbContext.Categories
-                    .Include(c => c.Products)
-                    .Where(c => c.CategoryId == categoryId)
-                    .Select(c => new CategoryDto
-                    {
-                        CategoryId = c.CategoryId,
-                        Name = c.Name,
-                        Slug = c.Slug,
-                    })
-                    .FirstOrDefaultAsync();
-
-                return category;
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Error occurred while getting the category. " + e.Message);
-            }
-        }
-
         public async Task<Category> AddCategory(CreateCategoryDto newCategory)
         {
             try
@@ -73,7 +50,9 @@ namespace backend_teamwork.Services
                 Category category = new Category
                 {
                     Name = newCategory.Name,
-                    Slug = Helper.GenerateSlug(newCategory.Name)
+                    Slug = Helper.GenerateSlug(newCategory.Name),
+                    Description = newCategory.Description,
+                    CreatedAt = DateTime.UtcNow
                 };
                 await _appDbContext.Categories.AddAsync(category);
                 await _appDbContext.SaveChangesAsync();
@@ -86,6 +65,31 @@ namespace backend_teamwork.Services
             }
         }
 
+        public async Task<CategoryDto> GetCategoryById(Guid categoryId)
+        {
+            try
+            {
+                var category = await _appDbContext.Categories
+                    .Include(c => c.Products)
+                    .Where(c => c.CategoryId == categoryId)
+                    .Select(c => new CategoryDto
+                    {
+                        CategoryId = c.CategoryId,
+                        Name = c.Name,
+                        Slug = c.Slug,
+                        Description = c.Description,
+                        CreatedAt = c.CreatedAt,
+                        Products = c.Products
+                    })
+                    .FirstOrDefaultAsync();
+
+                return category;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error occurred while getting the category. " + e.Message);
+            }
+        }
         public async Task<bool> UpdateCategory(Guid categoryId, CreateCategoryDto dto)
         {
             try
