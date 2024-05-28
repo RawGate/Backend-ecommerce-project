@@ -14,7 +14,7 @@ namespace backend_teamwork.DTOs
         [Required]
         public Guid ProductId { get; set; }
 
-        [MaxLength(10, ErrorMessage = "the name of product must less than 10 character")]
+        [MaxLength(100, ErrorMessage = "the name of product must less than 10 character")]
         [MinLength(2, ErrorMessage = "the name of product must more than 2 character")]
         [Required(ErrorMessage = "Product name is required")]
         public string Name { get; set; } = string.Empty;

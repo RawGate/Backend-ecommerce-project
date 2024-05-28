@@ -198,20 +198,24 @@ namespace backend_teamwork.Services
             {
                 if (e.InnerException is Npgsql.PostgresException post)
                 {
-                    // Log detailed Postgres exception information
+             
                     Console.WriteLine($"Postgres Error: {post.MessageText}, Detail: {post.Detail}");
                 }
-                // Log the full exception stack trace for further investigation
-                Console.WriteLine($"Exception: {e}");
+                else
+                {
+        
+                    Console.WriteLine($"Inner Exception: {e.InnerException?.Message}");
+                }
+                Console.WriteLine($"DbUpdateException: {e.Message}");
                 throw new Exception("Error occurred while adding the product. " + e.Message, e);
             }
             catch (Exception e)
             {
-                // Log the full exception stack trace for further investigation
-                Console.WriteLine($"Exception: {e}");
+                Console.WriteLine($"Exception: {e.Message}");
+                Console.WriteLine($"Inner Exception: {e.InnerException?.Message}");
                 throw new Exception("Error occurred while adding the product. " + e.Message, e);
             }
-           }
+        }
 
 
         public async Task<Product> UpdateProductById(Guid productId, CreateProductDto newProduct)

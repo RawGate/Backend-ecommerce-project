@@ -14,7 +14,7 @@ namespace backend_teamwork.EntityFramework
         [Column("product_id")] 
         public Guid ProductId { get; set; }
 
-        [MaxLength(10, ErrorMessage = "The product name must be less than 10 characters.")]
+        [MaxLength(100, ErrorMessage = "The product name must be less than 10 characters.")]
         [MinLength(2, ErrorMessage = "The product name must be more than 2 characters.")]
         [Required(ErrorMessage = "Product name is required.")]
         [Column("name")]
