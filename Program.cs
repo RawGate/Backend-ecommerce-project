@@ -49,7 +49,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000", "https://fitroot.netlify.app/")
+        policyBuilder.WithOrigins("https://fitroot.netlify.app")
                      .AllowAnyMethod()
                      .AllowAnyHeader()
                      .AllowCredentials();
